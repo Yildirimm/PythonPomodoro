@@ -1,1 +1,2 @@
 # PythonPomodoro
+A Pomodoro Application
