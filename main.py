@@ -1,95 +1,67 @@
-import csv
-import time
-import winsound
-import os.path
 from datetime import datetime
-import Category_handler as ch
-import Counter as Counter
 
+from category import Category
+from utils import check_shape, BeepSound, Counter
 import schedule
+
 
 cat_general = []
 cat_flag = 0
 
+
 if __name__ == '__main__':
 
-	the_day = datetime.today().strftime('%Y-%m-%d')
+    the_day = datetime.today().strftime('%Y-%m-%d')
 
-	# make a category object
-	c1 = ch.Category()
+    c1 = Category()
 
-	# print(c1.category_name)
+    c1.init_csv_file(file_name="categories.csv")
+    _category, the_last_one = c1.read_categories(file_name="categories.csv")
 
-	###### 1- print the existing categories
-	# and if they are empty, redirect him to add categories
-	cat, the_last_one = c1.read_the_categories()
-	#print("cat", len(cat), "|| and the last line ", the_last_one)
+    if len(_category) == 0:
+        print("There is no category right now! Redirecting to add category...\n")
+        c1.build_category()
+        c1.store_categories()
 
-	###### 1.1 choose the categories
-	if len(cat) == 0:
-		print("there is no category right now! Want to add some category ?")
-		print("[main]c1.category_name: ", c1.category_name)
-		# Category.build_the_category(c1)
+    else:
+        a = input("There are categories on table but if you want to add even more [y/n]?: ")
 
-		c1.build_the_category()
-		c1.store_categories(cat_flag)
+        if a == "y":
+            c1.build_category()
+            c1.store_categories()
 
-	###### 2- If he wants to add category, redirect him to add categories
-	else:
-		a = input("[main]There are categories on table but if you want to add even more [y/n]?: ")
+    chosen_one = c1.choose_category()
 
-		if a == "y":
-			c1.build_the_category()
-			c1.store_categories(cat_flag)
+    loop_number = 0
+    pomodoro_time = 0
 
-	###### 3- Choose one of the existing categories
-	chosen_one = c1.choose_category()
+    while True:
+        time_to_run = str(input("Enter the time as MM:SS, "))
+        _, mins, secs = check_shape(time_to_run)
 
-	###### 4- Start the Pomodoro Timer
+        counter_time = (int(mins) * 60) + int(secs)
+        Counter.countdown(int(counter_time))
+        BeepSound.beep()
 
-	# input time in seconds
-	# Kategori seçildi ve zamanı giriliyor
-	rows, cols = (4,2)
-	cycle = [[0 for i in range(cols)] for j in range(rows)]
-	loop_number = 0
-	pomodoro_time = 0
-	while True:
-		t = str(input("Enter the time as MM:SS, "))
-		_, mins, secs = Counter.check_shape(t)
-		# min, sec = t.split(":")
-		# print("mins secs ", mins,":", secs)
-		# print(type(clean_t),type(mins),type(secs))
-		count_t = (int(mins) * 60) + int(secs)
-		Counter.countdown(int(count_t))
-		Counter.beep()
+        loop_number += 1
+        pomodoro_time += counter_time
+        breaker = str(input("\nDo you want to break the cycle [y/n]?: "))
+        if breaker == "y":
+            count_t = pomodoro_time
+            break
 
-		loop_number += 1
-		pomodoro_time += count_t
-		cycle[loop_number].append(count_t)
-		print("loop_number, count_t, pomodoro_total_time : ",loop_number, count_t, pomodoro_time)
-		breaker = str(input("\nDo you want to break the cycle [y/n]?: "))
-		if breaker == "y":
-			count_t = pomodoro_time
-			break
-	print("\n, cycle here", cycle)
+    chosen_one.time_spent = round(count_t / 60, 3)
 
-	###### 5- Store the time and category into a file
-	chosen_one.time_spent = round(count_t / 60, 3)
+    Category.write_to_file(the_day, chosen_one.category_name, count_t)
 
-	print("\nchosen one: ", chosen_one.category_name, " ,time spent: ", chosen_one.time_spent)
-	# ch.Category.store_categories(chosen_one.time_spent)  # stores in seconds
+# schedule.every(2).seconds.do(c1.calculate_by_time())
 
-	Counter.write_to_file(the_day, chosen_one.category_name, count_t)
+# TODO: write the chosen ones into pomodoro, and make them to be summed and written into categories.
 
-	schedule.every(2).seconds.do(c1.calculate_by_time())
+# TODO: add the hour stamp to the pomodoro_records.csv also
+# TODO: add a function to add the studied stuff's hour on the records and it should ask at the beginning of the program
 
-	###### 6- Read from the pomodoro_records.csv and store to the categories.csv
-	# TODO: write the chosen ones into pomodoro, and make them to be summed and written into categories.
+# TODO: add timestamps to pomodoro records, as start-finish then you can get the time-interval from these
+# TODO: add a function to see if computer is on or not
 
-	# TODO: add the hour stamp to the pomodoro_records.csv also
-    # TODO: add a function to add the studied stuff's hour on the records and it should ask at the beginning of the program
-
-	# TODO: add timestamps to pomodoro records, as start-finish then you can get the time-interval from these
-	# TODO: add a function to see if computer is on or not
-
-	# TODO: add functions to categories to draw graphs
+# TODO: add functions to categories to draw graphs

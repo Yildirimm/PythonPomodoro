@@ -1,9 +1,4 @@
-# import the time module
-import csv
 import time
-import os.path
-
-
 
 class Counter:
 
@@ -15,6 +10,3 @@ class Counter:
 			print(timer, end="\r")  # carriage return
 			time.sleep(1)
 			t -= 1
-
-		print('Fire in the hole!!')
-
